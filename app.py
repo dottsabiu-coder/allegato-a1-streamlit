@@ -1,17 +1,11 @@
 import streamlit as st
 import io
+import base64
 from datetime import date
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
-
-# ── CONFIG ──
-st.set_page_config(
-    page_title="Allegato A1 – Regione Siciliana",
-    page_icon="🦷",
-    layout="centered"
-)
 
 W, H = A4
 BLU_NAVY  = colors.HexColor('#192850')
@@ -19,8 +13,19 @@ BLU_CIELO = colors.HexColor('#C0D2DF')
 ORO       = colors.HexColor('#8B6740')
 GRIGIO_L  = colors.HexColor('#666666')
 
+def get_logo_bytes():
+    import os
+    logo_path = os.path.join(os.path.dirname(__file__), 'logo_aio.jpg')
+    if os.path.exists(logo_path):
+        with open(logo_path, 'rb') as f:
+            return f.read()
+    return None
+
+LOGO_AIO_BYTES = get_logo_bytes()
+
+
 DOCS = [
-    (1,  "Documento che definisce ed esplicita l'organizzazione e le politiche di gestione delle risorse", "1A.01.03.01"),
+    (1,  "Documento che definisce ed esplicita l'organizzazione e le politiche di gestione delle risorse (analisi dei principali processi per l'individuazione delle fasi nelle quali e possibile che si verifichino disservizi)", "1A.01.03.01"),
     (2,  "Documentazione inerente il sistema informativo", "1A.01.04.01"),
     (3,  "Documento/programma che descrive le modalita per la valutazione e il miglioramento della qualita delle prestazioni e dei servizi erogati", "1A.01.05.01"),
     (4,  "Procedura per la presentazione e gestione di reclami, osservazioni e suggerimenti.", "1A.01.06.01"),
@@ -32,18 +37,18 @@ DOCS = [
     (10, "Inventario delle attrezzature aggiornato e verificato annualmente e procedura per l'identificazione delle attrezzature", "1A.03.02.01"),
     (11, "Piano per la gestione e la manutenzione (ordinaria e straordinaria) delle strutture, impianti, attrezzature e apparecchiature biomediche.", "1A.03.02.02"),
     (12, "Documentazione tecnica relativa alle singole attrezzature e apparecchiature immediatamente disponibile agli operatori interessati e alla funzione preposta alla manutenzione", "1A.03.02.03"),
-    (13, "Documentazione tecnica - caratteristiche ambientali e accessibilita", "1A.03.05.01"),
-    (14, "Documentazione tecnica - protezione antincendio", "1A.03.05.02"),
-    (15, "Documentazione tecnica - protezione acustica", "1A.03.05.03"),
-    (16, "Documentazione tecnica - sicurezza elettrica e continuita elettrica", "1A.03.05.04"),
-    (17, "Documentazione tecnica - sicurezza anti-infortunistica", "1A.03.05.05"),
-    (18, "Documentazione tecnica - protezione da radiazioni ionizzanti", "1A.03.05.06"),
-    (19, "Documentazione tecnica - eliminazione barriere architettoniche", "1A.03.05.07"),
-    (20, "Documentazione tecnica - smaltimento dei rifiuti", "1A.03.05.08"),
-    (21, "Documentazione tecnica - condizioni microclimatiche", "1A.03.05.09"),
-    (22, "Documentazione tecnica - impianti di distribuzione dei gas", "1A.03.05.10"),
-    (23, "Documentazione tecnica - materiali esplodenti", "1A.03.05.11"),
-    (24, "Documentazione tecnica - protezione antisismica", "1A.03.05.12"),
+    (13, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di caratteristiche ambientali e di accessibilita", "1A.03.05.01"),
+    (14, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di protezione antincendio", "1A.03.05.02"),
+    (15, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di protezione acustica", "1A.03.05.03"),
+    (16, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di sicurezza elettrica e continuita elettrica", "1A.03.05.04"),
+    (17, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di sicurezza anti-infortunistica", "1A.03.05.05"),
+    (18, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di protezione dai rischi di radiazioni ionizzanti", "1A.03.05.06"),
+    (19, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di eliminazione della barriere architettoniche", "1A.03.05.07"),
+    (20, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di smaltimento dei rifiuti", "1A.03.05.08"),
+    (21, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di condizioni microclimatiche", "1A.03.05.09"),
+    (22, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di impianti di distribuzione dei gas", "1A.03.05.10"),
+    (23, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di materiali esplodenti", "1A.03.05.11"),
+    (24, "Documentazione tecnica, in relazione alla tipologia delle attivita svolte, attestante il possesso dei requisiti previsti dalle vigenti leggi in materia di protezione antisismica", "1A.03.05.12"),
     (25, "Obblighi assicurativi definiti dalla normativa applicabile", "1A.04.12.04"),
     (26, "Carta dei servizi", "1A.05.03.01"),
     (27, "Modalita identificazione di tirocinanti, specializzandi e altri soggetti che intervengono nel percorso assistenziale.", "1A.05.03.03"),
@@ -211,25 +216,44 @@ def genera_pdf(s):
         c.setFillColor(colors.black)
 
     # ── PAGINA 1-2: TABELLA ALL.A1 ──
+    def wrap_text(txt, max_w, font, size):
+        words = txt.split()
+        lines = []; cur = ''
+        for w in words:
+            test = (cur+' '+w).strip()
+            if c.stringWidth(test, font, size) <= max_w: cur = test
+            else:
+                if cur: lines.append(cur)
+                cur = w
+        if cur: lines.append(cur)
+        return lines or [txt]
+
     def draw_row(i, num, desc, cod, y):
-        RH = 0.68*cm
+        FONT_SZ = 8; LH = 0.38*cm; PAD = 0.15*cm
+        max_doc_w = W - 4*cm - 3.5*cm - 0.4*cm
+        # Testo numerico + descrizione
+        full = f'{num}. {desc}'
+        wrapped = wrap_text(full, max_doc_w, 'Helvetica', FONT_SZ)
+        RH = len(wrapped) * LH + PAD * 2
+        RH = max(RH, 0.55*cm)
+
         c.setFillColor(colors.white if i%2==0 else colors.HexColor('#F5F5F5'))
         c.rect(2*cm, y-RH, W-4*cm, RH, fill=1, stroke=0)
         c.setStrokeColor(colors.HexColor('#CCCCCC'))
         c.setLineWidth(0.25)
         c.rect(2*cm, y-RH, W-4*cm, RH, fill=0)
         c.line(W-5.4*cm, y, W-5.4*cm, y-RH)
+
         c.setFillColor(colors.black)
-        c.setFont('Helvetica', 8)
-        trunc = f'{num}. {desc}'
-        max_w = W - 4*cm - 3.8*cm
-        while c.stringWidth(trunc, 'Helvetica', 8) > max_w:
-            trunc = trunc[:-1]
-        if trunc != f'{num}. {desc}':
-            trunc += '...'
-        c.drawString(2.1*cm, y-RH*0.62, trunc)
-        c.setFont('Helvetica-Oblique', 8)
-        c.drawString(W-5.3*cm, y-RH*0.62, cod)
+        c.setFont('Helvetica', FONT_SZ)
+        ty = y - PAD - LH + 0.05*cm
+        for l in wrapped:
+            c.drawString(2.1*cm, ty, l)
+            ty -= LH
+
+        # Codice in corsivo centrato verticalmente
+        c.setFont('Helvetica-Oblique', FONT_SZ)
+        c.drawString(W-5.3*cm, y - RH/2 - 0.12*cm, cod)
         return y - RH
 
     # Header pag 1
@@ -248,7 +272,8 @@ def genera_pdf(s):
     c.drawString(2*cm,H-4.3*cm,"A1 del D.A. 9 gennaio 2024 n. 20.")
     gdv=["Il Responsabile della struttura mettera a disposizione del GdV prima della visita i seguenti",
          "documenti previsti dai requisiti generali per l'autorizzazione di cui all'allegato A1 al decreto",
-         "assessoriale 09 gennaio 2024 n. 20 (G.U.R.S. 26 gennaio 2024, n. 5, S.O. n. 4)"]
+         "assessoriale 09 gennaio 2024 n. 20 (G.U.R.S. 26 gennaio 2024, n. 5, S.O. n. 4)",
+         ""]
     bh=len(gdv)*0.41*cm+0.35*cm
     c.rect(2*cm,H-5.1*cm,W-4*cm,bh)
     yg=H-4.97*cm
@@ -316,6 +341,15 @@ def genera_pdf(s):
         c.setFillColor(colors.HexColor('#8B6740'))
         c.setFont('Helvetica',7.5)
         c.drawString(BX+0.5*cm,BY+0.8*cm,s['titolare'].upper())
+        # Logo AIO in alto a sinistra della pagina
+        try:
+            from reportlab.lib.utils import ImageReader
+            logo_buf = io.BytesIO(LOGO_AIO_BYTES)
+            logo_img = ImageReader(logo_buf)
+            c.drawImage(logo_img, 1.2*cm, H-2.8*cm, width=2.5*cm, height=2.5*cm,
+                       preserveAspectRatio=True, mask='auto')
+        except Exception:
+            pass
         footer(pg[0]+1); pg[0]+=1; c.showPage()
 
         # PAGINE CONTENUTO
@@ -370,9 +404,13 @@ def genera_pdf(s):
 # INTERFACCIA STREAMLIT
 # ══════════════════════════════════════════
 
-st.title("🦷 Generatore Allegato A1")
-st.subheader("Strutture Non Residenziali Semplici Monopresidio — Regione Siciliana")
-st.markdown("*A cura della Dr.ssa Barbara Sabiu / AIO Palermo*")
+col_logo, col_title = st.columns([1, 4])
+with col_logo:
+    st.image(LOGO_AIO_BYTES, width=100)
+with col_title:
+    st.title("Generatore Allegato A1")
+    st.subheader("Strutture Non Residenziali Semplici Monopresidio — Regione Siciliana")
+    st.caption("*A cura della Dr.ssa Barbara Sabiu / AIO Palermo*")
 st.divider()
 
 with st.form("dati_studio"):
