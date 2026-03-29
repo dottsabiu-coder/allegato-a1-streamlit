@@ -776,10 +776,11 @@ with st.form("dati_studio"):
                                    placeholder="es. Via Roma 15")
         comune = st.text_input("Comune *", placeholder="es. Palermo")
     with col2:
-        provincia = st.text_input("Provincia (sigla) *", placeholder="PA", max_chars=2)
+        provincia = st.text_input("Provincia (sigla) *", value="", placeholder="es. CA")
         cap = st.text_input("CAP", placeholder="90100", max_chars=5)
+        st.info("⚠️ Nota: questo tool è per strutture della Regione Siciliana. Se sei in Sardegna, seleziona l'ASP più vicina e modificala manualmente nel PDF.")
         asp_options = ["ASP Agrigento","ASP Caltanissetta","ASP Catania","ASP Enna",
-                       "ASP Messina","ASP Palermo","ASP Ragusa","ASP Siracusa","ASP Trapani"]
+                           "ASP Messina","ASP Palermo","ASP Ragusa","ASP Siracusa","ASP Trapani"]
         asp = st.selectbox("ASP di riferimento *", asp_options, index=5)
         albo = st.text_input("N. iscrizione Albo Odontoiatri *", placeholder="es. PA/1234")
 
@@ -790,15 +791,36 @@ with st.form("dati_studio"):
         anno = st.text_input("Anno", value=str(date.today().year), max_chars=4)
 
     st.divider()
+    st.subheader("📝 Dati aggiuntivi (opzionali ma consigliati)")
+    st.caption("Questi dati personalizzeranno ulteriormente i documenti.")
+
+    col5, col6 = st.columns(2)
+    with col5:
+        direttore = st.text_input("Direttore Tecnico (se diverso dal titolare)",
+                                   placeholder="es. Dott. Mario Rossi")
+        n_riuniti = st.text_input("N° riuniti / sale trattamento", placeholder="es. 2")
+        software = st.text_input("Software gestionale in uso", placeholder="es. Ari Studio")
+    with col6:
+        rspp = st.text_input("Responsabile RSPP", placeholder="es. Dott. Mario Rossi")
+        n_operatori = st.text_input("N° operatori totali", placeholder="es. 5")
+        polizza = st.text_input("Compagnia assicurativa RC", placeholder="es. Generali")
+
+    st.divider()
     submitted = st.form_submit_button("📄 Genera PDF Allegato A1", use_container_width=True,
                                        type="primary")
 
 if submitted:
-    if not denominazione or not titolare or not indirizzo or not comune or not provincia or not albo:
+    if not all([denominazione.strip(), titolare.strip(), indirizzo.strip(), comune.strip(), provincia.strip(), albo.strip()]):
         st.error("⚠️ Compila tutti i campi obbligatori (*)")
     else:
         s = {
             'denominazione': denominazione,
+            'direttore': direttore if direttore else titolare,
+            'n_riuniti': n_riuniti or '2',
+            'software': software or 'Software gestionale',
+            'rspp': rspp if rspp else titolare,
+            'n_operatori': n_operatori or 'N/D',
+            'polizza': polizza or '______________________________',
             'titolare': titolare,
             'indirizzo': indirizzo,
             'comune': comune,
