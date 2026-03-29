@@ -55,25 +55,33 @@ DOCS = [
 ]
 
 def get_testo(num, s):
-    nome = s['denominazione'].title()
-    tit  = s['titolare'].title()
-    dir_ = s.get('direttore', '').strip() or tit   # Direttore Tecnico, fallback = titolare
-    adr  = f"{s['indirizzo'].title()}, {s['comune'].title()} ({s['provincia'].upper()})"
-    albo = s.get('albo', '').strip()
-    pec  = s.get('pec', '').strip()
-    anno = s['anno']
-    oggi = date.today().strftime('%d/%m/%Y')
+    nome      = s['denominazione'].title()
+    tit       = s['titolare'].title()
+    dir_      = s.get('direttore', '').strip() or tit
+    resp_mnt  = s.get('resp_manut', '').strip() or tit
+    adr       = f"{s['indirizzo'].title()}, {s['comune'].title()} ({s['provincia'].upper()})"
+    albo      = s.get('albo', '').strip()
+    cf        = s.get('cf', '').strip()
+    telefono  = s.get('telefono', '').strip()
+    pec       = s.get('pec', '').strip()
+    asp       = s.get('asp', '').strip()
+    anno      = s['anno']
+    oggi      = date.today().strftime('%d/%m/%Y')
 
-    albo_str = f"N. Albo Odontoiatri: {albo}" if albo else ""
-    pec_str  = f"PEC/Email: {pec}" if pec else ""
-    contatti = " | ".join(filter(None, [albo_str, pec_str]))
+    albo_str = f"Albo: {albo}" if albo else ""
+    cf_str   = f"CF/PIVA: {cf}" if cf else ""
+    tel_str  = f"Tel: {telefono}" if telefono else ""
+    pec_str  = f"PEC: {pec}" if pec else ""
+    asp_str  = f"ASP: {asp}" if asp else ""
+    contatti = " | ".join(filter(None, [albo_str, cf_str, tel_str, pec_str]))
 
     base = {
         1: f"""DOCUMENTO DI ORGANIZZAZIONE E GESTIONE DELLE RISORSE
 Cod. Requisito 1A.01.03.01 - REV. 1/{anno}
 
 Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
-Sede: {adr}{(" | " + contatti) if contatti else ""}
+Sede: {adr} | {asp_str}
+{contatti}
 
 1. SCOPO E CAMPO DI APPLICAZIONE
 Il presente documento definisce l'organizzazione interna dello studio odontoiatrico, le politiche adottate per la gestione delle risorse umane, materiali e tecnologiche, e analizza i principali processi per individuare le fasi critiche in cui possono verificarsi disservizi.
@@ -388,7 +396,7 @@ Cod. Requisito 1A.03.01.01 - REV. 1/{anno}
 
 Il/La sottoscritto/a {tit}, Titolare / Legale Rappresentante dello Studio {nome},
 
-NOMINA quale Responsabile della Manutenzione dello studio il/la Sig./Dott. ___________________
+NOMINA quale Responsabile della Manutenzione dello studio il/la: {resp_mnt}
 
 FUNZIONI E RESPONSABILITA
 - Coordinare tutti gli interventi di manutenzione ordinaria e straordinaria
@@ -603,10 +611,14 @@ def genera_pdf(s):
     s['comune']        = s['comune'].title()
     s['indirizzo']     = s['indirizzo'].title()
     s['provincia']     = s['provincia'].upper()
-    if s.get('direttore'):
+    if s.get('direttore') and s['direttore'].strip():
         s['direttore'] = s['direttore'].title()
     else:
         s['direttore'] = s['titolare']
+    if s.get('resp_manut') and s['resp_manut'].strip():
+        s['resp_manut'] = s['resp_manut'].title()
+    else:
+        s['resp_manut'] = s['titolare']
 
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
@@ -779,6 +791,12 @@ def genera_pdf(s):
 # INTERFACCIA STREAMLIT
 # ══════════════════════════════════════════
 
+# Session state inizializzato SUBITO, prima di qualsiasi widget
+if "pdf_bytes" not in st.session_state:
+    st.session_state.pdf_bytes    = None
+    st.session_state.pdf_filename = None
+    st.session_state.pdf_pages    = None
+
 st.title("🦷 Generatore Allegato A1")
 st.subheader("Strutture Non Residenziali Semplici Monopresidio — Regione Siciliana")
 st.markdown("*A cura della Dr.ssa Barbara Sabiu / AIO Palermo*")
@@ -791,69 +809,83 @@ with st.form("dati_studio"):
     with col1:
         denominazione = st.text_input("Denominazione / Ragione Sociale *",
                                        placeholder="es. Studio Odontoiatrico Bianchi S.r.l.")
-        titolare = st.text_input("Nome e Cognome Titolare *",
-                                  placeholder="es. Dott. Marco Bianchi")
-        indirizzo = st.text_input("Indirizzo sede *",
-                                   placeholder="es. Via Roma 15")
-        comune = st.text_input("Comune *", placeholder="es. Palermo")
+        titolare      = st.text_input("Responsabile Sanitario / Titolare *",
+                                       placeholder="es. Dott.ssa Maria Bianchi")
+        direttore     = st.text_input("Direttore Tecnico (se diverso dal titolare)",
+                                       placeholder="es. Dott. Marco Rossi")
+        resp_manut    = st.text_input("Responsabile Manutenzione",
+                                       placeholder="es. Geom. Luca Verdi")
     with col2:
-        provincia = st.text_input("Provincia (sigla) *", placeholder="PA", max_chars=2)
-        cap = st.text_input("CAP", placeholder="90100", max_chars=5)
-        asp_options = ["ASP Agrigento","ASP Caltanissetta","ASP Catania","ASP Enna",
-                       "ASP Messina","ASP Palermo","ASP Ragusa","ASP Siracusa","ASP Trapani"]
-        asp = st.selectbox("ASP di riferimento *", asp_options, index=5)
-        albo = st.text_input("N. iscrizione Albo Odontoiatri *", placeholder="es. PA/1234")
+        indirizzo  = st.text_input("Indirizzo sede *", placeholder="es. Via Roma 15")
+        comune     = st.text_input("Comune *",         placeholder="es. Palermo")
+        provincia  = st.text_input("Provincia (sigla) *", placeholder="PA", max_chars=2)
+        cap        = st.text_input("CAP *",            placeholder="90100", max_chars=5)
 
+    st.markdown("---")
     col3, col4 = st.columns(2)
     with col3:
-        pec = st.text_input("PEC / Email ufficiale", placeholder="studio@pec.it")
-        direttore = st.text_input("Direttore Tecnico (se diverso dal titolare)",
-                                   placeholder="es. Dott.ssa Maria Bianchi")
+        asp_options = ["ASP Agrigento","ASP Caltanissetta","ASP Catania","ASP Enna",
+                       "ASP Messina","ASP Palermo","ASP Ragusa","ASP Siracusa","ASP Trapani"]
+        asp       = st.selectbox("ASP di riferimento *", asp_options, index=5)
+        albo      = st.text_input("N. iscrizione Albo Odontoiatri *", placeholder="es. PA/1234")
+        cf        = st.text_input("Codice Fiscale / P.IVA *", placeholder="es. 12345678901")
     with col4:
-        anno = st.text_input("Anno", value=str(date.today().year), max_chars=4)
+        telefono  = st.text_input("Telefono", placeholder="es. 091 123456")
+        pec       = st.text_input("PEC / Email ufficiale", placeholder="studio@pec.it")
+        anno      = st.text_input("Anno", value=str(date.today().year), max_chars=4)
 
-    st.divider()
-    submitted = st.form_submit_button("📄 Genera PDF Allegato A1", use_container_width=True,
-                                       type="primary")
-
-# Stato sessione per il PDF generato
-if "pdf_bytes" not in st.session_state:
-    st.session_state.pdf_bytes = None
-    st.session_state.pdf_filename = None
-    st.session_state.pdf_pages = None
+    st.markdown("---")
+    st.caption("I campi con * sono obbligatori")
+    submitted = st.form_submit_button("📄 Genera PDF Allegato A1",
+                                       use_container_width=True, type="primary")
 
 if submitted:
-    if not denominazione or not titolare or not indirizzo or not comune or not provincia or not albo:
-        st.error("⚠️ Compila tutti i campi obbligatori (*)")
+    campi_mancanti = []
+    if not denominazione: campi_mancanti.append("Denominazione")
+    if not titolare:      campi_mancanti.append("Responsabile Sanitario")
+    if not indirizzo:     campi_mancanti.append("Indirizzo")
+    if not comune:        campi_mancanti.append("Comune")
+    if not provincia:     campi_mancanti.append("Provincia")
+    if not cap:           campi_mancanti.append("CAP")
+    if not albo:          campi_mancanti.append("N. Albo Odontoiatri")
+    if not cf:            campi_mancanti.append("Codice Fiscale / P.IVA")
+
+    if campi_mancanti:
+        st.error(f"⚠️ Compila i campi obbligatori: {', '.join(campi_mancanti)}")
     else:
         s = {
             'denominazione': denominazione,
-            'titolare': titolare,
-            'direttore': direttore,
-            'indirizzo': indirizzo,
-            'comune': comune,
-            'provincia': provincia.upper(),
-            'cap': cap,
-            'asp': asp,
-            'albo': albo,
-            'pec': pec,
-            'anno': anno or str(date.today().year),
+            'titolare':      titolare,
+            'direttore':     direttore,
+            'resp_manut':    resp_manut or titolare,
+            'indirizzo':     indirizzo,
+            'comune':        comune,
+            'provincia':     provincia.upper(),
+            'cap':           cap,
+            'asp':           asp,
+            'albo':          albo,
+            'cf':            cf,
+            'telefono':      telefono,
+            'pec':           pec,
+            'anno':          anno or str(date.today().year),
         }
 
         with st.spinner("⏳ Generazione PDF in corso..."):
             try:
                 pdf_bytes, n_pages = genera_pdf(s)
                 nome_file = denominazione.replace(' ','_').replace('/','_')[:25]
-                filename = f"AllegatoA1_{nome_file}_{date.today().strftime('%Y%m%d')}.pdf"
-                st.session_state.pdf_bytes = pdf_bytes
+                filename  = f"AllegatoA1_{nome_file}_{date.today().strftime('%Y%m%d')}.pdf"
+                st.session_state.pdf_bytes    = pdf_bytes
                 st.session_state.pdf_filename = filename
-                st.session_state.pdf_pages = n_pages
-                st.success(f"✅ PDF generato con successo! ({n_pages} pagine)")
+                st.session_state.pdf_pages    = n_pages
             except Exception as e:
                 st.error(f"❌ Errore durante la generazione: {e}")
+                import traceback
+                st.code(traceback.format_exc())
 
-# Download button FUORI dallo spinner per evitare bug Streamlit Cloud
+# ── Download button SEMPRE fuori dallo spinner ──
 if st.session_state.pdf_bytes is not None:
+    st.success(f"✅ PDF generato con successo! ({st.session_state.pdf_pages} pagine)")
     st.download_button(
         label="⬇️ Scarica PDF Allegato A1",
         data=st.session_state.pdf_bytes,
