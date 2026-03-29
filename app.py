@@ -55,23 +55,32 @@ DOCS = [
 ]
 
 def get_testo(num, s):
-    nome = s['denominazione']
-    tit  = s['titolare']
-    adr  = f"{s['indirizzo']}, {s['comune']} ({s['provincia']})"
+    nome = s['denominazione'].title()
+    tit  = s['titolare'].title()
+    dir_ = s.get('direttore', '').strip() or tit   # Direttore Tecnico, fallback = titolare
+    adr  = f"{s['indirizzo'].title()}, {s['comune'].title()} ({s['provincia'].upper()})"
+    albo = s.get('albo', '').strip()
+    pec  = s.get('pec', '').strip()
     anno = s['anno']
     oggi = date.today().strftime('%d/%m/%Y')
+
+    albo_str = f"N. Albo Odontoiatri: {albo}" if albo else ""
+    pec_str  = f"PEC/Email: {pec}" if pec else ""
+    contatti = " | ".join(filter(None, [albo_str, pec_str]))
 
     base = {
         1: f"""DOCUMENTO DI ORGANIZZAZIONE E GESTIONE DELLE RISORSE
 Cod. Requisito 1A.01.03.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit} | Sede: {adr}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
+Sede: {adr}{(" | " + contatti) if contatti else ""}
 
 1. SCOPO E CAMPO DI APPLICAZIONE
 Il presente documento definisce l'organizzazione interna dello studio odontoiatrico, le politiche adottate per la gestione delle risorse umane, materiali e tecnologiche, e analizza i principali processi per individuare le fasi critiche in cui possono verificarsi disservizi.
 
 2. STRUTTURA ORGANIZZATIVA
 - Responsabile Sanitario / Titolare ({tit}): coordina le attivita cliniche e gestionali.
+- Direttore Tecnico ({dir_}): supervisione tecnica e qualita dei processi clinici.
 - Odontoiatri collaboratori: eseguono i trattamenti e si occupano della presa in carico dei pazienti.
 - Igienisti dentali / ASO: supportano l'attivita clinica e garantiscono igiene e sterilizzazione.
 - Personale amministrativo: gestisce accoglienza, appuntamenti e documentazione.
@@ -90,12 +99,12 @@ Il presente documento definisce l'organizzazione interna dello studio odontoiatr
 5. MONITORAGGIO E MIGLIORAMENTO
 Audit interni semestrali. Riunioni staff mensili. Analisi customer satisfaction.
 
-Data di adozione: {oggi}    Firma: {tit}""",
+Data di adozione: {oggi}    Firma Responsabile Sanitario: {tit}    Firma Direttore Tecnico: {dir_}""",
 
         2: f"""DOCUMENTAZIONE INERENTE IL SISTEMA INFORMATIVO
 Cod. Requisito 1A.01.04.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. SISTEMA GESTIONALE IN USO
 Lo studio adotta un sistema informatico per la gestione integrata delle attivita cliniche e amministrative: agenda elettronica, cartella clinica digitale, fatturazione, reportistica.
@@ -116,7 +125,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         6: f"""PIANO PER LA GESTIONE DELLE EMERGENZE
 Cod. Requisito 1A.02.02.02 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit} | Sede: {adr}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_} | Sede: {adr}
 
 1. TIPOLOGIE DI EMERGENZA
 - Medica paziente: sincope, shock anafilattico, arresto cardiaco, crisi epilettica, ipoglicemia
@@ -142,7 +151,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         29: f"""PIANO AZIENDALE PER LA GESTIONE DEL RISCHIO
 Cod. Requisito 1A.06.02.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit} | Sede: {adr}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_} | Sede: {adr}
 
 1. SCOPO
 Definire strategie e procedure per la gestione del rischio clinico e organizzativo.
@@ -167,7 +176,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         30: f"""PROCEDURA PER LA PULIZIA E SANIFICAZIONE DEGLI AMBIENTI
 Cod. Requisito 1A.06.02.02 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. FREQUENZA DEGLI INTERVENTI
 Dopo ogni paziente: decontaminazione tutte le superfici della sala trattamento.
@@ -190,7 +199,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         31: f"""PROCEDURA PROTEZIONE DA INCIDENTI CON MATERIALE BIOLOGICO
 Cod. Requisito 1A.06.02.03 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. MISURE PREVENTIVE
 DPI sistematici: guanti monouso, mascherina, occhiali, camice.
@@ -215,7 +224,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         32: f"""SISTEMA PER L'IDENTIFICAZIONE E SEGNALAZIONE DI NEAR MISS ED EVENTI AVVERSI
 Cod. Requisito 1A.06.02.04 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. DEFINIZIONI
 Near miss: evento che avrebbe potuto causare un danno ma non si e verificato.
@@ -267,7 +276,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         3: f"""PROGRAMMA PER LA VALUTAZIONE E IL MIGLIORAMENTO DELLA QUALITA
 Cod. Requisito 1A.01.05.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. INDICATORI MONITORATI
 - Soddisfazione paziente: questionari post-trattamento. Target: >= 90%
@@ -309,7 +318,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         5: f"""PROCEDURA PER LE MODALITA DI EROGAZIONE DELL'ASSISTENZA
 Cod. Requisito 1A.02.02.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. PRENOTAZIONE
 Telefono, di persona, email/portale online. Tempi di attesa comunicati alla prenotazione.
@@ -331,7 +340,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         7: f"""PROTOCOLLO ISOLAMENTO PAZIENTI CON PATOLOGIE CONTAGIOSE
 Cod. Requisito 1A.02.02.03 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. IDENTIFICAZIONE DEL RISCHIO
 A rischio: patologie respiratorie acute, infezioni cutanee trasmissibili, epatiti virali, HIV, TBC attiva.
@@ -352,7 +361,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         8: f"""PROCEDURA PER LA GESTIONE DELLA DOCUMENTAZIONE SANITARIA
 Cod. Requisito 1A.02.05.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. TIPOLOGIE DI DOCUMENTAZIONE
 Cartella clinica, referti radiografici, consensi informati, piani di trattamento e preventivi.
@@ -398,7 +407,7 @@ Firma per accettazione: ______________________""",
         10: f"""INVENTARIO ATTREZZATURE E PROCEDURA DI IDENTIFICAZIONE
 Cod. Requisito 1A.03.02.01 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 PROCEDURA DI IDENTIFICAZIONE
 Ogni attrezzatura identificata con codice univoco su etichetta apposta sull'apparecchiatura.
@@ -420,7 +429,7 @@ Ad ogni nuova acquisizione: collaudo tecnico di sicurezza. Verbale conservato ne
         11: f"""PIANO DI MANUTENZIONE STRUTTURE E ATTREZZATURE
 Cod. Requisito 1A.03.02.02 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 MANUTENZIONE ORDINARIA PROGRAMMATA
 
@@ -445,7 +454,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         12: f"""DOCUMENTAZIONE TECNICA ATTREZZATURE
 Cod. Requisito 1A.03.02.03 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 DOCUMENTAZIONE DISPONIBILE PER OGNI ATTREZZATURA
 Per ogni apparecchiatura e conservato un fascicolo contenente:
@@ -469,7 +478,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         25: f"""OBBLIGHI ASSICURATIVI
 Cod. Requisito 1A.04.12.04 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. ASSICURAZIONE PROFESSIONALE RC
 Ai sensi della Legge 8 marzo 2017, n. 24 (Legge Gelli-Bianco):
@@ -517,7 +526,7 @@ Data di revisione: {oggi}    Firma: {tit}""",
         27: f"""MODALITA DI IDENTIFICAZIONE DI TIROCINANTI E SPECIALIZZANDI
 Cod. Requisito 1A.05.03.03 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. TIPOLOGIE DI SOGGETTI
 Tirocinanti universitari, specializzandi, collaboratori a contratto.
@@ -538,7 +547,7 @@ Data di adozione: {oggi}    Firma: {tit}""",
         28: f"""REPORT CUSTOMER SATISFACTION E RECLAMI
 Cod. Requisito 1A.05.03.05 - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_}
 
 1. METODOLOGIA
 Questionari post-trattamento, analisi reclami, monitoraggio recensioni online.
@@ -563,7 +572,7 @@ Data: {oggi}    Firma: {tit}""",
             altri[n_t] = f"""DOCUMENTAZIONE TECNICA - {tema.upper()}
 Cod. Requisito 1A.03.05.{str(n_t-12).zfill(2)} - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit} | Sede: {adr}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_} | Sede: {adr}
 
 NORMATIVA DI RIFERIMENTO: {norma}
 
@@ -579,7 +588,7 @@ Data verifica: {oggi}    Firma: ______________________"""
     return tutti.get(num, f"""DOCUMENTO {num}
 Cod. {DOCS[num-1][2]} - REV. 1/{anno}
 
-Studio: {nome} | Responsabile: {tit} | Sede: {adr}
+Studio: {nome} | Responsabile Sanitario: {tit} | Direttore Tecnico: {dir_} | Sede: {adr}
 
 Documento da compilare a cura del Responsabile della struttura.
 
@@ -587,6 +596,18 @@ Data: {oggi}    Firma: ______________________""")
 
 
 def genera_pdf(s):
+    # Normalize capitalization
+    s = dict(s)
+    s['denominazione'] = s['denominazione'].title()
+    s['titolare']      = s['titolare'].title()
+    s['comune']        = s['comune'].title()
+    s['indirizzo']     = s['indirizzo'].title()
+    s['provincia']     = s['provincia'].upper()
+    if s.get('direttore'):
+        s['direttore'] = s['direttore'].title()
+    else:
+        s['direttore'] = s['titolare']
+
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     pg = [0]
@@ -675,7 +696,7 @@ def genera_pdf(s):
         c.rect(BX,BY+BH-NH,BW,NH,fill=1,stroke=0)
         c.setFillColor(colors.white)
         sy=BY+BH-0.9*cm
-        for line in [s['denominazione'],s['titolare'],s['indirizzo'],s['comune']+' ('+s['provincia']+')']:
+        for line in [s['denominazione'], s['titolare'] + ' (Resp.)', s['direttore'] + ' (Dir.Tec.)', s['indirizzo'], s['comune']+' ('+s['provincia']+')']:
             if not line: continue
             c.setFont('Helvetica-Bold' if sy>BY+BH-1.5*cm else 'Helvetica',
                       9 if sy>BY+BH-1.5*cm else 8.5)
@@ -786,12 +807,20 @@ with st.form("dati_studio"):
     col3, col4 = st.columns(2)
     with col3:
         pec = st.text_input("PEC / Email ufficiale", placeholder="studio@pec.it")
+        direttore = st.text_input("Direttore Tecnico (se diverso dal titolare)",
+                                   placeholder="es. Dott.ssa Maria Bianchi")
     with col4:
         anno = st.text_input("Anno", value=str(date.today().year), max_chars=4)
 
     st.divider()
     submitted = st.form_submit_button("📄 Genera PDF Allegato A1", use_container_width=True,
                                        type="primary")
+
+# Stato sessione per il PDF generato
+if "pdf_bytes" not in st.session_state:
+    st.session_state.pdf_bytes = None
+    st.session_state.pdf_filename = None
+    st.session_state.pdf_pages = None
 
 if submitted:
     if not denominazione or not titolare or not indirizzo or not comune or not provincia or not albo:
@@ -800,6 +829,7 @@ if submitted:
         s = {
             'denominazione': denominazione,
             'titolare': titolare,
+            'direttore': direttore,
             'indirizzo': indirizzo,
             'comune': comune,
             'provincia': provincia.upper(),
@@ -815,19 +845,24 @@ if submitted:
                 pdf_bytes, n_pages = genera_pdf(s)
                 nome_file = denominazione.replace(' ','_').replace('/','_')[:25]
                 filename = f"AllegatoA1_{nome_file}_{date.today().strftime('%Y%m%d')}.pdf"
-
+                st.session_state.pdf_bytes = pdf_bytes
+                st.session_state.pdf_filename = filename
+                st.session_state.pdf_pages = n_pages
                 st.success(f"✅ PDF generato con successo! ({n_pages} pagine)")
-                st.download_button(
-                    label="⬇️ Scarica PDF Allegato A1",
-                    data=pdf_bytes,
-                    file_name=filename,
-                    mime="application/pdf",
-                    use_container_width=True,
-                    type="primary"
-                )
-                st.info("Il PDF contiene: tabella ALL.A1 + 32 copertine + documenti precompilati con i dati del tuo studio.")
             except Exception as e:
                 st.error(f"❌ Errore durante la generazione: {e}")
+
+# Download button FUORI dallo spinner per evitare bug Streamlit Cloud
+if st.session_state.pdf_bytes is not None:
+    st.download_button(
+        label="⬇️ Scarica PDF Allegato A1",
+        data=st.session_state.pdf_bytes,
+        file_name=st.session_state.pdf_filename,
+        mime="application/pdf",
+        use_container_width=True,
+        type="primary"
+    )
+    st.info("Il PDF contiene: tabella ALL.A1 + 32 copertine + documenti precompilati con i dati del tuo studio.")
 
 st.divider()
 st.caption("Generatore Allegato A1 — Regione Siciliana | A cura della Dr.ssa Barbara Sabiu / AIO Palermo")
